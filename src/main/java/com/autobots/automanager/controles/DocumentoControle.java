@@ -2,93 +2,76 @@ package com.autobots.automanager.controles;
 
 import java.util.List;
 
+import com.autobots.automanager.entidades.Cliente;
+import com.autobots.automanager.entidades.Documento;
+import com.autobots.automanager.modelos.documento.AdicionadorLinkDocumento;
+import com.autobots.automanager.modelos.cliente.ClienteSelecionador;
+import com.autobots.automanager.modelos.documento.DocumentoSelecionador;
+import com.autobots.automanager.repositorios.ClienteRepositorio;
+import com.autobots.automanager.repositorios.DocumentoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.autobots.automanager.entidades.Documento;
-import com.autobots.automanager.modelos.documento.AdicionadorLinkDocumento;
-import com.autobots.automanager.modelos.documento.DocumentoSelecionador;
-import com.autobots.automanager.modelos.documento.DocumentoAtualizador;
-import com.autobots.automanager.repositorios.DocumentoRepositorio;
-
 @RestController
+@RequestMapping("/documento")
 public class DocumentoControle {
 	@Autowired
 	private DocumentoRepositorio repositorio;
 	@Autowired
-	private DocumentoSelecionador selecionador;
+	private AdicionadorLinkDocumento adicionadorLinkDocumento;
 	@Autowired
-	private AdicionadorLinkDocumento adicionadorLink;
-
-	@GetMapping("/documento/{id}")
-	public ResponseEntity<Documento> obterDocumento(@PathVariable long id) {
-		List<Documento> documentos = repositorio.findAll();
-		Documento documento = selecionador.selecionar(documentos, id);
-		if (documento == null) {
-			ResponseEntity<Documento> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			return resposta;
-		} else {
-			adicionadorLink.adicionarLink(documento);
-			ResponseEntity<Documento> resposta = new ResponseEntity<Documento>(documento, HttpStatus.FOUND);
-			return resposta;
-		}
-	}
+	private DocumentoSelecionador selecionarDocumento;
+	@Autowired
+	private ClienteRepositorio clienteRepositorio;
+	@Autowired
+	private ClienteSelecionador clienteSelecionador;
 
 	@GetMapping("/documentos")
 	public ResponseEntity<List<Documento>> obterDocumentos() {
+		HttpStatus status = HttpStatus.NOT_FOUND;
 		List<Documento> documentos = repositorio.findAll();
-		if (documentos.isEmpty()) {
-			ResponseEntity<List<Documento>> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			return resposta;
+		if (documentos == null) {
+			return new ResponseEntity<List<Documento>>(status);
 		} else {
-			adicionadorLink.adicionarLink(documentos);
-			ResponseEntity<List<Documento>> resposta = new ResponseEntity<>(documentos, HttpStatus.FOUND);
-			return resposta;
+			adicionadorLinkDocumento.adicionarLink(documentos);
+			status = HttpStatus.FOUND;
+			return new ResponseEntity<List<Documento>>(documentos, status);
 		}
 	}
 
-	@PostMapping("/documento/cadastro")
-	public ResponseEntity<?> cadastrarDocumento(@RequestBody Documento documento) {
-		HttpStatus status = HttpStatus.CONFLICT;
-		if (documento.getId() == null) {
-			repositorio.save(documento);
-			status = HttpStatus.CREATED;
-		}
-		return new ResponseEntity<>(status);
-
+	@GetMapping("/{id}")
+	public Documento obterDocumento(@PathVariable long id) {
+		List<Documento> documentos = repositorio.findAll();
+		return selecionarDocumento.selecionar(documentos, id);
 	}
 
-	@PutMapping("/documento/atualizar")
-	public ResponseEntity<?> atualizarDocumento(@RequestBody Documento atualizacao) {
-		HttpStatus status = HttpStatus.CONFLICT;
-		Documento documento = repositorio.getById(atualizacao.getId());
-		if (documento != null) {
-			DocumentoAtualizador atualizador = new DocumentoAtualizador();
-			atualizador.atualizar(documento, atualizacao);
-			repositorio.save(documento);
-			status = HttpStatus.OK;
-		} else {
-			status = HttpStatus.BAD_REQUEST;
-		}
-		return new ResponseEntity<>(status);
+	@PutMapping("/cadastro")
+	public void cadastrarDocumento(@RequestBody Cliente cliente) {
+		List<Cliente> clientes = clienteRepositorio.findAll();
+		Cliente clienteAlvo = clienteSelecionador.selecionar(clientes, cliente.getId());
+		clienteAlvo.getDocumentos().addAll(cliente.getDocumentos());
+		clienteRepositorio.save(clienteAlvo);
 	}
 
-	@DeleteMapping("/documento/excluir")
-	public ResponseEntity<?> excluirDocumento(@RequestBody Documento exclusao) {
-		HttpStatus status = HttpStatus.BAD_REQUEST;
-		Documento documento = repositorio.getById(exclusao.getId());
-		if (documento != null) {
-			repositorio.delete(documento);
-			status = HttpStatus.OK;
+	@DeleteMapping("/excluir/{clienteId}/{documentoId}")
+	public void deletarDocumento(@PathVariable long clienteId, @PathVariable long documentoId) {
+		Cliente cliente = clienteRepositorio.getById(clienteId);
+		List<Documento> listaDocumentos = cliente.getDocumentos();
+		Documento findDocumento = null;
+		for (Documento documento : listaDocumentos) {
+			if (documento.getId() == documentoId) {
+				findDocumento = documento;
+			}
 		}
-		return new ResponseEntity<>(status);
+		listaDocumentos.remove(findDocumento);
+		clienteRepositorio.save(cliente);
 	}
 }
