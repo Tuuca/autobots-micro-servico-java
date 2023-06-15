@@ -7,27 +7,56 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.autobots.automanager.entitades.CredencialUsuarioSenha;
-import com.autobots.automanager.entitades.Documento;
-import com.autobots.automanager.entitades.Email;
-import com.autobots.automanager.entitades.Empresa;
-import com.autobots.automanager.entitades.Endereco;
-import com.autobots.automanager.entitades.Mercadoria;
-import com.autobots.automanager.entitades.Servico;
-import com.autobots.automanager.entitades.Telefone;
-import com.autobots.automanager.entitades.Usuario;
-import com.autobots.automanager.entitades.Veiculo;
-import com.autobots.automanager.entitades.Venda;
+import com.autobots.automanager.entidades.CredencialUsuarioSenha;
+import com.autobots.automanager.entidades.Documento;
+import com.autobots.automanager.entidades.Email;
+import com.autobots.automanager.entidades.Empresa;
+import com.autobots.automanager.entidades.Endereco;
+import com.autobots.automanager.entidades.Mercadoria;
+import com.autobots.automanager.entidades.Servico;
+import com.autobots.automanager.entidades.Telefone;
+import com.autobots.automanager.entidades.Usuario;
+import com.autobots.automanager.entidades.Veiculo;
+import com.autobots.automanager.entidades.Venda;
 import com.autobots.automanager.enumeracoes.PerfilUsuario;
 import com.autobots.automanager.enumeracoes.TipoDocumento;
 import com.autobots.automanager.enumeracoes.TipoVeiculo;
+import com.autobots.automanager.repositorios.RepositorioDocumento;
+import com.autobots.automanager.repositorios.RepositorioEmail;
 import com.autobots.automanager.repositorios.RepositorioEmpresa;
+import com.autobots.automanager.repositorios.RepositorioEndereco;
+import com.autobots.automanager.repositorios.RepositorioUsuario;
+import com.autobots.automanager.repositorios.RepositorioVeiculo;
+import com.autobots.automanager.repositorios.RepositorioVenda;
+import com.autobots.automanager.repositorios.RepositorioMercadoria;
+import com.autobots.automanager.repositorios.RepositorioServico;
+import com.autobots.automanager.repositorios.RepositorioTelefone;
+
+
 
 @SpringBootApplication
 public class AutomanagerApplication implements CommandLineRunner {
 
 	@Autowired
 	private RepositorioEmpresa repositorioEmpresa;
+	@Autowired
+	private RepositorioUsuario repositorioUsuario;
+	@Autowired
+	private RepositorioVeiculo repositorioVeiculo;
+	@Autowired
+	private RepositorioVenda repositorioVenda;
+	@Autowired
+	private RepositorioMercadoria repositorioMercadoria;
+	@Autowired
+	private RepositorioServico repositorioServico;
+	@Autowired
+	private RepositorioDocumento repositorioDocumento;
+	@Autowired
+	private RepositorioEmail repositorioEmail;
+	@Autowired
+	private RepositorioEndereco repositorioEndereco;
+	@Autowired
+	private RepositorioTelefone repositorioTelefone;
 
 	public static void main(String[] args) {
 		SpringApplication.run(AutomanagerApplication.class, args);
@@ -225,40 +254,68 @@ public class AutomanagerApplication implements CommandLineRunner {
 		empresa.getVendas().add(venda);
 
 		repositorioEmpresa.save(empresa);
-		
-		Mercadoria rodaLigaLeve2 = new Mercadoria();
-		rodaLigaLeve2.setCadastro(new Date());
-		rodaLigaLeve2.setFabricao(new Date());
-		rodaLigaLeve2.setNome("Roda de liga leva modelo toyota etios");
-		rodaLigaLeve2.setValidade(new Date());
-		rodaLigaLeve2.setQuantidade(30);
-		rodaLigaLeve2.setValor(300.0);
-		rodaLigaLeve2.setDescricao("Roda de liga leve original de fábrica da toyta para modelos do tipo hatch");
-		
-		Servico alinhamento2 = new Servico();
-		alinhamento2.setDescricao("Alinhamento das rodas do carro");
-		alinhamento2.setNome("Alinhamento de rodas");
-		alinhamento2.setValor(50);
-		
-		Servico balanceamento = new Servico();
-		balanceamento.setDescricao("balanceamento das rodas do carro");
-		balanceamento.setNome("balanceamento de rodas");
-		balanceamento.setValor(30);
-		
-		Venda venda2 = new Venda();
-		venda2.setCadastro(new Date());
-		venda2.setCliente(cliente);
-		venda2.getMercadorias().add(rodaLigaLeve2);
-		venda2.setIdentificacao("1234698749");
-		venda2.setFuncionario(funcionario);
-		venda2.getServicos().add(balanceamento);
-		venda2.getServicos().add(alinhamento2);
-		venda2.setVeiculo(veiculo);
-		veiculo.getVendas().add(venda2);
 
-		empresa.getVendas().add(venda2);
+		// Testes de consulta
+
+		System.out.println("Empresa: " + empresa.getNomeFantasia());
+		System.out.println("Funcionário: " + funcionario.getNome());
+		System.out.println("Fornecedor: " + fornecedor.getNome());
+		System.out.println("Cliente: " + cliente.getNome());
+		System.out.println("Mercadoria: " + rodaLigaLeve.getNome());
+		System.out.println("Serviço: " + trocaRodas.getNome());
+		System.out.println("Venda: " + venda.getIdentificacao());
+		System.out.println("Veículo: " + veiculo.getPlaca());
+		System.out.println("Endereço: " + enderecoCliente.getRua());
+		System.out.println("Documento: " + cpfCliente.getNumero());
+		System.out.println("Email: " + emailCliente.getEndereco());
+		System.out.println("Credencial: " + credencialCliente.getNomeUsuario());
+		System.out.println("Telefone: " + telefoneEmpresa.getNumero());
 		
+		// Testes de alteração
+
+		empresa.setNomeFantasia("Oficina do João");
+		funcionario.setNome("João da Silva");
+		fornecedor.setNome("João da Silva");
+		cliente.setNome("João da Silva");
+		rodaLigaLeve.setNome("Roda de liga leve modelo toyota corolla");
+		trocaRodas.setNome("Troca de rodas do carro");
+		alinhamento.setNome("Alinhamento de rodas do carro");
+		venda.setIdentificacao("1234567890");
+		veiculo.setPlaca("ABC-1234");
+		enderecoCliente.setRua("Av. Dr. João D'Ávila");
+		cpfCliente.setNumero("12345678900");
+		emailCliente.setEndereco("Rua João da Silva, 123");
+		telefoneEmpresa.setNumero("12999999999");
+
 		repositorioEmpresa.save(empresa);
+		repositorioUsuario.save(funcionario);
+		repositorioUsuario.save(fornecedor);
+		repositorioUsuario.save(cliente);
+		repositorioMercadoria.save(rodaLigaLeve);
+		repositorioServico.save(trocaRodas);
+		repositorioServico.save(alinhamento);
+		repositorioVenda.save(venda);
+		repositorioVeiculo.save(veiculo);
+		repositorioEndereco.save(enderecoCliente);
+		repositorioDocumento.save(cpfCliente);
+		repositorioEmail.save(emailCliente);
+		repositorioTelefone.save(telefoneEmpresa);
+		
+		// Testes de exclusão
+
+		repositorioEmpresa.delete(empresa);
+		repositorioUsuario.delete(funcionario);
+		repositorioUsuario.delete(fornecedor);
+		repositorioUsuario.delete(cliente);
+		repositorioMercadoria.delete(rodaLigaLeve);
+		repositorioServico.delete(trocaRodas);
+		repositorioServico.delete(alinhamento);
+		repositorioVenda.delete(venda);
+		repositorioVeiculo.delete(veiculo);
+		repositorioEndereco.delete(enderecoCliente);
+		repositorioDocumento.delete(cpfCliente);
+		repositorioEmail.delete(emailCliente);
+		repositorioTelefone.delete(telefoneEmpresa);
 
 	}
 }
